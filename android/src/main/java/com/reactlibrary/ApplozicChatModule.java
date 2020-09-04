@@ -11,6 +11,7 @@ import com.applozic.mobicomkit.Applozic;
 import com.applozic.mobicomkit.ApplozicClient;
 import com.applozic.mobicomkit.api.conversation.Message;
 import com.applozic.mobicomkit.api.conversation.MessageBuilder;
+import com.applozic.mobicomkit.api.conversation.MobiComConversationService;
 import com.applozic.mobicomkit.exception.ApplozicException;
 import com.applozic.mobicomkit.contact.AppContactService;
 import com.applozic.mobicomkit.listners.MediaUploadProgressHandler;
@@ -90,7 +91,8 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
                     };
                     String registrationId = Applozic.getInstance(context).getDeviceRegistrationId();
                     pushNotificationTask = new PushNotificationTask(registrationId, listener, currentActivity);
-                    pushNotificationTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);;
+                    pushNotificationTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    ;
                 } else {
                     String json = GsonUtils.getJsonFromObject(registrationResponse, RegistrationResponse.class);
                     callback.invoke(json, null);
@@ -142,75 +144,75 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
         currentActivity.startActivity(intent);
     }
 
-      @ReactMethod
-      public void openChatWithGroup(Integer groupId, final Callback callback) {
+    @ReactMethod
+    public void openChatWithGroup(Integer groupId, final Callback callback) {
 
-          final Activity currentActivity = getCurrentActivity();
-          if (currentActivity == null) {
-              callback.invoke("Activity doesn't exist", null);
-              return;
-          }
+        final Activity currentActivity = getCurrentActivity();
+        if (currentActivity == null) {
+            callback.invoke("Activity doesn't exist", null);
+            return;
+        }
 
-          if (groupId != null) {
+        if (groupId != null) {
 
-              AlGroupInformationAsyncTask.GroupMemberListener taskListener = new AlGroupInformationAsyncTask.GroupMemberListener() {
-                  @Override
-                  public void onSuccess(Channel channel, Context context) {
-                      Intent chatIntent = new Intent(context, ConversationActivity.class);
-                      chatIntent.putExtra(ConversationUIService.GROUP_ID, channel.getKey());
-                      chatIntent.putExtra(ConversationUIService.GROUP_NAME, channel.getName());
-                      chatIntent.putExtra(ConversationUIService.TAKE_ORDER, true);
-                      context.startActivity(chatIntent);
-                      callback.invoke(null, "success");
-                  }
+            AlGroupInformationAsyncTask.GroupMemberListener taskListener = new AlGroupInformationAsyncTask.GroupMemberListener() {
+                @Override
+                public void onSuccess(Channel channel, Context context) {
+                    Intent chatIntent = new Intent(context, ConversationActivity.class);
+                    chatIntent.putExtra(ConversationUIService.GROUP_ID, channel.getKey());
+                    chatIntent.putExtra(ConversationUIService.GROUP_NAME, channel.getName());
+                    chatIntent.putExtra(ConversationUIService.TAKE_ORDER, true);
+                    context.startActivity(chatIntent);
+                    callback.invoke(null, "success");
+                }
 
-                  @Override
-                  public void onFailure(Channel channel, Exception e, Context context) {
-                      callback.invoke("Failed to launch group chat", null);
-                  }
-              };
-              AlGroupInformationAsyncTask groupInfoTask = new AlGroupInformationAsyncTask(currentActivity, groupId, taskListener);
-              groupInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                @Override
+                public void onFailure(Channel channel, Exception e, Context context) {
+                    callback.invoke("Failed to launch group chat", null);
+                }
+            };
+            AlGroupInformationAsyncTask groupInfoTask = new AlGroupInformationAsyncTask(currentActivity, groupId, taskListener);
+            groupInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-          } else {
-              callback.invoke("unable to launch group chat, check your groupId/ClientGroupId", null);
-          }
+        } else {
+            callback.invoke("unable to launch group chat, check your groupId/ClientGroupId", null);
+        }
 
-      }
+    }
 
-      @ReactMethod
-      public void openChatWithClientGroupId(String clientGroupId, final Callback callback) {
+    @ReactMethod
+    public void openChatWithClientGroupId(String clientGroupId, final Callback callback) {
 
-          final Activity currentActivity = getCurrentActivity();
-          if (currentActivity == null) {
-              callback.invoke("Activity doesn't exist", null);
-              return;
-          }
+        final Activity currentActivity = getCurrentActivity();
+        if (currentActivity == null) {
+            callback.invoke("Activity doesn't exist", null);
+            return;
+        }
 
-          if (TextUtils.isEmpty(clientGroupId)) {
-              callback.invoke("unable to launch group chat, check your groupId/ClientGroupId", null);
-          } else {
+        if (TextUtils.isEmpty(clientGroupId)) {
+            callback.invoke("unable to launch group chat, check your groupId/ClientGroupId", null);
+        } else {
 
-              AlGroupInformationAsyncTask.GroupMemberListener taskListener = new AlGroupInformationAsyncTask.GroupMemberListener() {
-                  @Override
-                  public void onSuccess(Channel channel, Context context) {
-                      Intent chatIntent = new Intent(context, ConversationActivity.class);
-                      chatIntent.putExtra(ConversationUIService.GROUP_ID, channel.getKey());
-                      chatIntent.putExtra(ConversationUIService.GROUP_NAME, channel.getName());
-                      chatIntent.putExtra(ConversationUIService.TAKE_ORDER, true);
-                      context.startActivity(chatIntent);
-                      callback.invoke(null, "success");
-                  }
+            AlGroupInformationAsyncTask.GroupMemberListener taskListener = new AlGroupInformationAsyncTask.GroupMemberListener() {
+                @Override
+                public void onSuccess(Channel channel, Context context) {
+                    Intent chatIntent = new Intent(context, ConversationActivity.class);
+                    chatIntent.putExtra(ConversationUIService.GROUP_ID, channel.getKey());
+                    chatIntent.putExtra(ConversationUIService.GROUP_NAME, channel.getName());
+                    chatIntent.putExtra(ConversationUIService.TAKE_ORDER, true);
+                    context.startActivity(chatIntent);
+                    callback.invoke(null, "success");
+                }
 
-                  @Override
-                  public void onFailure(Channel channel, Exception e, Context context) {
-                      callback.invoke("Failed to launch group chat", null);
-                  }
-              };
-              AlGroupInformationAsyncTask groupInfoTask = new AlGroupInformationAsyncTask(currentActivity, clientGroupId, taskListener);
-              groupInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-          }
-      }
+                @Override
+                public void onFailure(Channel channel, Exception e, Context context) {
+                    callback.invoke("Failed to launch group chat", null);
+                }
+            };
+            AlGroupInformationAsyncTask groupInfoTask = new AlGroupInformationAsyncTask(currentActivity, clientGroupId, taskListener);
+            groupInfoTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+    }
 
     @ReactMethod
     public void logoutUser(final Callback callback) {
@@ -632,6 +634,13 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
             options.put(item.getKey(), (Boolean) item.getValue());
         }
         ApplozicSetting.getInstance(currentActivity).setAttachmentOptions(options);
+    }
+
+    public void getLatestMessagesGroupByPeople(final Callback callback) {
+        MobiComConversationService mobiComConversationService = new MobiComConversationService(this.getReactApplicationContext());
+        List<Message> messages = mobiComConversationService.getLatestMessagesGroupByPeople();
+
+        callback.invoke(null, messages);
     }
 
     @Override
