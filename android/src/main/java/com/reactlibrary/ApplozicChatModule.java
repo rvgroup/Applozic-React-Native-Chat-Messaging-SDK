@@ -636,6 +636,7 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
         ApplozicSetting.getInstance(currentActivity).setAttachmentOptions(options);
     }
 
+    @ReactMethod
     public void getLatestMessagesGroupByPeople(final Callback callback) {
         MobiComConversationService mobiComConversationService = new MobiComConversationService(this.getReactApplicationContext());
         List<Message> messages = mobiComConversationService.getLatestMessagesGroupByPeople();
