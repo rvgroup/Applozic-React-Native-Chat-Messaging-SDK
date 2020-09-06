@@ -33,7 +33,9 @@ import com.applozic.mobicommons.file.FileUtils;
 import com.applozic.mobicommons.json.GsonUtils;
 import com.applozic.mobicommons.people.channel.Channel;
 import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -41,6 +43,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.applozic.mobicomkit.feed.AlResponse;
 import com.applozic.mobicomkit.uiwidgets.async.ApplozicChannelRemoveMemberTask;
 import com.applozic.mobicommons.people.contact.Contact;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -637,11 +641,43 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
     }
 
     @ReactMethod
-    public void getLatestMessagesGroupByPeople(final Callback callback) {
-        MobiComConversationService mobiComConversationService = new MobiComConversationService(this.getReactApplicationContext());
-        List<Message> messages = mobiComConversationService.getLatestMessagesGroupByPeople();
+    public void getLatestMessagesGroupByPeople(Promise promise) {
+        Context context = this.getReactApplicationContext();
+        MobiComConversationService mobiComConversationService = new MobiComConversationService(context);
 
-        callback.invoke(null, messages);
+        try {
+            List<Message> messages = mobiComConversationService.getLatestMessagesGroupByPeople();
+
+            //callback.invoke(null, messages);
+            WritableMap output = Arguments.createMap();
+
+            if (messages != null) {
+                WritableArray message = Arguments.createArray();
+                WritableArray groupFeeds = Arguments.createArray();
+
+                for (Message msg : messages) {
+                    message.pushMap(messageToMap(msg));
+
+                    if (msg.isGroupMessage()) {
+                        int groupId = msg.getGroupId();
+
+                        Channel channel = ChannelService.getInstance(context).getChannelInfo(groupId);
+                        if (channel != null) {
+                            groupFeeds.pushMap(channelToMap(channel));
+                        }
+                    } else {
+                        //msg.getSuUserKeyString()
+                    }
+                }
+
+                output.putArray("message", message);
+                output.putArray("groupFeeds", groupFeeds);
+            }
+
+            promise.resolve(output);
+        } catch (Exception ex) {
+            promise.reject(ex);
+        }
     }
 
     @Override
@@ -652,4 +688,78 @@ public class ApplozicChatModule extends ReactContextBaseJavaModule implements Ac
     public void onNewIntent(Intent intent) {
     }
 
+    private WritableMap channelToMap(Channel channel) {
+        WritableMap map = Arguments.createMap();
+
+        // TODO
+
+        return map;
+    }
+
+    private WritableMap messageToMap(Message msg) {
+        WritableMap map = Arguments.createMap();
+
+        map.putDouble("createdAtTime", msg.getCreatedAtTime());
+        map.putString("to", msg.getTo());
+        map.putString("message", msg.getMessage());
+        map.putString("key", msg.getKeyString());
+        map.putString("deviceKey", msg.getDeviceKeyString());
+        map.putString("userKey", msg.getSuUserKeyString());
+        map.putString("emailIds", msg.getEmailIds());
+        map.putBoolean("shared", msg.isShared());
+        map.putBoolean("sent", msg.isSent());
+        map.putBoolean("delivered", msg.getDelivered());
+        map.putInt("type", msg.getType());
+        map.putBoolean("storeOnDevice", msg.isStoreOnDevice());
+        map.putString("contactIds", msg.getContactIds());
+        map.putInt("groupId", msg.getGroupId());
+        map.putBoolean("sendToDevice", msg.isSendToDevice());
+        map.putDouble("scheduledAt", msg.getScheduledAt());
+        map.putInt("source", msg.getSource());
+        map.putInt("timeToLive", msg.getTimeToLive());
+        map.putBoolean("sentToServer", msg.isSentToServer());
+        map.putString("fileMetaKey", msg.getFileMetaKeyStrings());
+        map.putArray("filePaths", convertToWritableArray(msg.getFilePaths()));
+        map.putString("pairedMessageKey", msg.getPairedMessageKeyString());
+        map.putDouble("sentMessageTimeAtServer", msg.getSentMessageTimeAtServer());
+        map.putBoolean("canceled", msg.isCanceled());
+        map.putString("clientGroupId", msg.getClientGroupId());
+        map.putString("fileMeta", msg.getFileMetaKeyStrings());
+        map.putDouble("messageId", msg.getMessageId());
+        map.putBoolean("read", msg.isRead());
+        map.putBoolean("attDownloadInProgress", msg.isAttDownloadInProgress());
+        map.putString("applicationId", msg.getApplicationId());
+        map.putInt("conversationId", msg.getConversationId());
+        map.putString("topicId", msg.getTopicId());
+        map.putBoolean("connected", msg.isConnected());
+        map.putInt("contentType", msg.getContentType());
+        map.putMap("metadata", convertToWritableMap(msg.getMetadata()));
+        map.putInt("status", msg.getStatus());
+
+        return map;
+    }
+
+    private WritableMap convertToWritableMap(Map<String, String> map) {
+        WritableMap output = Arguments.createMap();
+
+        if (map != null) {
+            for (String key:map.keySet()) {
+                output.putString(key, map.get(key));
+            }
+        }
+
+        return output;
+    }
+
+    private WritableArray convertToWritableArray(List<String> list) {
+        WritableArray output = Arguments.createArray();
+
+        if (list != null) {
+            for (String value:list) {
+                output.pushString(value);
+            }
+        }
+
+        return output;
+    }
 }
